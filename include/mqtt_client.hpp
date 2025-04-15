@@ -5,20 +5,21 @@
 #include <functional>
 #include <mqtt_client.hpp>
 
+
+#define MAX_PARAMS 60 // Maximum number of parameters
+
 class MQTTClient {
 public:
-    static constexpr size_t MAX_PARAMS = 20;
-
     MQTTClient();
-    bool addParam(const MQTTPar& param);
+    bool addParam(MQTTPar* param);
     bool removeParam(const std::string& id);
-    void removeAllParams() { parameters.fill(std::nullopt); }
-    size_t getParamCount() const { return parameters.size(); }
-    MQTTPar *getParamByIdx(size_t idx);
+    void removeAllParams();
+    void publishAllParams();
     void loop(); // Call this periodically to publish
     void setPublishCallback(std::function<void(const std::string&, const std::string&)> cb);
+    void printParams() const;
 
 private:
-    std::array<std::optional<MQTTPar>, MAX_PARAMS> parameters;
+    std::array<MQTTPar*, MAX_PARAMS> parameters = {};
     std::function<void(const std::string&, const std::string&)> publishCallback;
 };
