@@ -8,9 +8,9 @@ MQTTClient::MQTTClient() {
     parameters.reserve(20);
 }
 
-bool MQTTClient::addParam(std::unique_ptr<IMQTTPar> param) {
+int MQTTClient::addParam(std::unique_ptr<IMQTTPar> param) {
     parameters.push_back(std::move(param));
-    return true;
+    return parameters.size() - 1;
 }
 
 bool MQTTClient::removeParam(const std::string& id) {
