@@ -1,43 +1,37 @@
-
+// mqtt_client.cpp
 #include "mqtt_client.hpp"
+#include <cstdio>
+#include <algorithm>
 
 MQTTClient::MQTTClient() {
-    // Setup logic if needed
+    // Reserve space for 20 parameters to avoid multiple allocations
+    parameters.reserve(20);
 }
 
-bool MQTTClient::addParam(MQTTPar* param) {
-    for (auto& p : parameters) {
-        if (p == nullptr) {
-            p = param;
-            return true;
-        }
-    }
-    return false; // Assuming successful addition
+bool MQTTClient::addParam(std::unique_ptr<IMQTTPar> param) {
+    parameters.push_back(std::move(param));
+    return true;
 }
 
 bool MQTTClient::removeParam(const std::string& id) {
-    for (auto& p : parameters) {
-        if (p != nullptr && p->id == id) {
-            delete p;
-            p = nullptr;
-            return true;
-        }
+    auto it = std::remove_if(parameters.begin(), parameters.end(),
+        [&](const std::unique_ptr<IMQTTPar>& p) {
+            return p && p->getId() == id;
+        });
+    if (it != parameters.end()) {
+        parameters.erase(it, parameters.end());
+        return true;
     }
-    return false; // Parameter not found
+    return false;
 }
 
 void MQTTClient::removeAllParams() {
-    for (auto& p : parameters) {
-        if (p != nullptr) {
-            delete p;
-            p = nullptr;
-        }
-    }
+    parameters.clear();
 }
 
 void MQTTClient::publishAllParams() {
     for (auto& p : parameters) {
-        if (p != nullptr) {
+        if (p) {
             p->triggerPublish();
         }
     }
@@ -45,9 +39,9 @@ void MQTTClient::publishAllParams() {
 
 void MQTTClient::loop() {
     for (auto& p : parameters) {
-        if (p != nullptr && p->shouldPublish()) {
+        if (p && p->shouldPublish()) {
             if (publishCallback) {
-                publishCallback(p->topic, p->value);
+                publishCallback(p->getTopic(), p->getValueAsString());
             }
             p->markPublished();
         }
@@ -55,15 +49,15 @@ void MQTTClient::loop() {
 }
 
 void MQTTClient::setPublishCallback(std::function<void(const std::string&, const std::string&)> cb) {
-    publishCallback = cb;
+    publishCallback = std::move(cb);
 }
 
 void MQTTClient::printParams() const {
-    printf("MQTT Parameters (%d):\n", parameters.size());
+    printf("MQTT Parameters:\n");
     for (const auto& p : parameters) {
-        if (p != nullptr) {
-            printf("    Topic: %16s, ID: %16s, Metric: %2d, Description: %16s, Value: %10s\n",
-                   p->topic.c_str(), p->id.c_str(), p->metric, p->description.c_str(), p->value.c_str());
+        if (p) {
+            printf("    Topic: %16s, ID: %16s, Value: %s\n",
+                   p->getTopic().c_str(), p->getId().c_str(), p->getValueAsString().c_str());
         }
     }
-}
+} 

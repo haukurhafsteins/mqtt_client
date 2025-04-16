@@ -1,25 +1,31 @@
+// mqtt_client.hpp
 #pragma once
-#include "mqtt_par.hpp"
+
 #include <array>
-#include <optional>
+#include <memory>
 #include <functional>
-#include <mqtt_client.hpp>
-
-
-#define MAX_PARAMS 60 // Maximum number of parameters
+#include <string>
+#include "mqtt_par.hpp"
 
 class MQTTClient {
 public:
+    static constexpr size_t MAX_PARAMS = 10;
+
     MQTTClient();
-    bool addParam(MQTTPar* param);
+
+    bool addParam(std::unique_ptr<IMQTTPar> param);
     bool removeParam(const std::string& id);
     void removeAllParams();
     void publishAllParams();
-    void loop(); // Call this periodically to publish
+    void loop();
+
     void setPublishCallback(std::function<void(const std::string&, const std::string&)> cb);
     void printParams() const;
 
 private:
-    std::array<MQTTPar*, MAX_PARAMS> parameters = {};
+    // Using std::array to limit the number of parameters to MAX_PARAMS
+    // Alternatively, you can use std::vector if you want dynamic sizing
+    std::vector<std::unique_ptr<IMQTTPar>> parameters;
+    // std::array<std::unique_ptr<IMQTTPar>, MAX_PARAMS> parameters;
     std::function<void(const std::string&, const std::string&)> publishCallback;
 };
