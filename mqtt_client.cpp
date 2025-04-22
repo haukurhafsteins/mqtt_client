@@ -41,14 +41,14 @@ void MQTTClient::loop() {
     for (auto& p : parameters) {
         if (p && p->shouldPublish()) {
             if (publishCallback) {
-                publishCallback(p->getTopic(), p->getValueAsString());
+                publishCallback(p->getTopic(), p->getValueAsString(), p->getQos());
             }
             p->markPublished();
         }
     }
 }
 
-void MQTTClient::setPublishCallback(std::function<void(const std::string&, const std::string&)> cb) {
+void MQTTClient::setPublishCallback(std::function<void(const std::string &, const std::string &, const qos_t&)> cb) {
     publishCallback = std::move(cb);
 }
 

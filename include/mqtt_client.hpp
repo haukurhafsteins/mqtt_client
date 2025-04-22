@@ -7,6 +7,7 @@
 #include <string>
 #include "mqtt_par.hpp"
 
+typedef 
 class MQTTClient
 {
 public:
@@ -31,7 +32,7 @@ public:
 
     void loop();
 
-    void setPublishCallback(std::function<void(const std::string &, const std::string &)> cb);
+    void setPublishCallback(std::function<void(const std::string &, const std::string &, const qos_t&)> cb);
     void printParams() const;
 
 private:
@@ -39,5 +40,5 @@ private:
     // Alternatively, you can use std::vector if you want dynamic sizing
     std::vector<std::unique_ptr<IMQTTPar>> parameters;
     // std::array<std::unique_ptr<IMQTTPar>, MAX_PARAMS> parameters;
-    std::function<void(const std::string &, const std::string &)> publishCallback;
+    std::function<void(const std::string &, const std::string &, const qos_t&)> publishCallback;
 };
